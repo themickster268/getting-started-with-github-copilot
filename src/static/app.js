@@ -17,11 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
+        activityCard.dataset.activityName = name;
 
         const spotsLeft = details.max_participants - details.participants.length;
 
         activityCard.innerHTML = `
-          <h4>${name}</h4>
+          <h4 tabindex="-1">${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
@@ -55,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </svg>
             `;
             removeButton.addEventListener("click", async () => {
+              const participantIndex = Array.from(participantsList.children).indexOf(listItem);
               removeButton.disabled = true;
               try {
                 const response = await fetch(
@@ -68,6 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 await fetchActivities();
+                const updatedActivityCard = Array.from(activitiesList.children).find(
+                  (card) => card.dataset.activityName === name
+                );
+                const remainingButtons = updatedActivityCard?.querySelectorAll(
+                  ".remove-participant-button"
+                );
+                if (remainingButtons?.length) {
+                  remainingButtons[Math.min(participantIndex, remainingButtons.length - 1)].focus();
+                } else {
+                  updatedActivityCard?.querySelector("h4")?.focus();
+                }
                 messageDiv.textContent = result.message;
                 messageDiv.className = "success";
                 messageDiv.classList.remove("hidden");
